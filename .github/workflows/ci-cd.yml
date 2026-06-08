@@ -80,6 +80,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Get Short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -88,12 +92,12 @@ jobs:
         with:
           context: .
           load: true
-          tags: gmail-calendar-mcp:${{ github.sha }}
+          tags: gmail-calendar-mcp:${{ steps.vars.outputs.sha_short }}
 
       - name: Security Scan (Trivy Container Scanner)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: gmail-calendar-mcp:${{ github.sha }}
+          image-ref: gmail-calendar-mcp:${{ steps.vars.outputs.sha_short }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -114,4 +118,4 @@ jobs:
           push: true
           tags: |
             ${{ secrets.REGISTRY_USERNAME }}/gmail-calendar-mcp:latest
-            ${{ secrets.REGISTRY_USERNAME }}/gmail-calendar-mcp:${{ github.sha }}
+            ${{ secrets.REGISTRY_USERNAME }}/gmail-calendar-mcp:${{ steps.vars.outputs.sha_short }}
