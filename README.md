@@ -205,3 +205,22 @@ npm run build
 # Run unit tests
 npm test
 ```
+
+---
+
+## 6. Testing with the MCP Inspector
+
+The Model Context Protocol includes an interactive developer inspector. You can launch and test this server locally:
+
+```bash
+# 1. Export credentials
+export GMAIL_CLIENT_ID="your-client-id"
+export GMAIL_CLIENT_SECRET="your-client-secret"
+export GMAIL_REFRESH_TOKEN="your-refresh-token"
+
+# 2. Run the official MCP Inspector utility
+npx @modelcontextprotocol/inspector node dist/index.js
+```
+
+The inspector will launch a local web dashboard (typically at http://localhost:5173) where you can inspect, run, and manually test the registered Gmail and Calendar tools.
+

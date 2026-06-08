@@ -1,5 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import express from "express";
 import { createAuth, gmailClient, calendarClient } from "./auth.js";
 import { registerGmailTools } from "./tools/gmail.js";
 import { registerCalendarTools } from "./tools/calendar.js";
@@ -33,11 +35,35 @@ async function main() {
   registerGmailTools(server, gmail);
   registerCalendarTools(server, calendar);
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  // Check if we should run SSE/HTTP mode
+  if (process.argv.includes("--sse") || process.env.PORT) {
+    const app = express();
+    const port = process.env.PORT || 3000;
+    
+    let transport: SSEServerTransport | null = null;
 
-  // Log to stderr so it doesn't pollute the MCP stdio channel
-  console.error("Gmail + Calendar MCP server running (stdio)");
+    app.get("/sse", async (_req, res) => {
+      transport = new SSEServerTransport("/messages", res as any);
+      await server.connect(transport);
+    });
+
+    app.post("/messages", express.json(), async (req, res) => {
+      if (transport) {
+        await transport.handleMessage(req as any, res as any);
+      } else {
+        res.status(400).send("No active transport session");
+      }
+    });
+
+    app.listen(port, () => {
+      console.error(`Gmail + Calendar MCP SSE server listening on port ${port}`);
+    });
+  } else {
+    // Default to StdioServerTransport
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error("Gmail + Calendar MCP server running (stdio)");
+  }
 }
 
 main().catch(err => {
