@@ -75,9 +75,13 @@ To interact with the Google APIs, you must set up a project in Google Cloud:
 
 ## 3. Configuration in AI Clients
 
-### A. Local Node.js Mode
-Add this configuration block inside your AI configuration registry:
+This server supports two transport mechanisms: **Stdio** (Default, standard for local desktop clients) and **SSE (HTTP)** (for hosting over the network).
 
+### A. Stdio Mode (Default, Recommended for Desktop Clients)
+No transport arguments are required. The server automatically launches in Stdio mode.
+
+#### Local Node.js Setup
+Add this configuration block inside your AI configuration registry:
 - **Claude Desktop**: Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 - **Antigravity / VSCode**: Add to your editor's MCP server configuration.
 
@@ -97,21 +101,10 @@ Add this configuration block inside your AI configuration registry:
 }
 ```
 
-### B. Container Mode (Docker / Podman)
-If you do not want to install Node.js locally, you can run the server in a sandbox using **Docker** or **Podman**.
+#### Container Stdio Setup (Docker / Podman)
+To run Stdio inside a container, you must pass the `-i` (interactive) flag to docker:
 
-#### 1. Build the Container Image
-First, build the lightweight Docker image:
-```bash
-# Docker
-docker build -t gmail-calendar-mcp:latest .
-
-# Podman
-podman build -t gmail-calendar-mcp:latest .
-```
-
-#### 2. Configure AI Client using Docker
-Add the following to your AI configuration:
+##### Docker Stdio Config:
 ```json
 {
   "mcpServers": {
@@ -124,15 +117,14 @@ Add the following to your AI configuration:
         "-e", "GMAIL_CLIENT_ID=YOUR_CLIENT_ID",
         "-e", "GMAIL_CLIENT_SECRET=YOUR_CLIENT_SECRET",
         "-e", "GMAIL_REFRESH_TOKEN=YOUR_REFRESH_TOKEN",
-        "gmail-calendar-mcp:latest"
+        "srinivassrinu842/gmail-calendar-mcp:latest"
       ]
     }
   }
 }
 ```
 
-#### 3. Configure AI Client using Podman
-Add the following to your AI configuration:
+##### Podman Stdio Config:
 ```json
 {
   "mcpServers": {
@@ -145,8 +137,56 @@ Add the following to your AI configuration:
         "-e", "GMAIL_CLIENT_ID=YOUR_CLIENT_ID",
         "-e", "GMAIL_CLIENT_SECRET=YOUR_CLIENT_SECRET",
         "-e", "GMAIL_REFRESH_TOKEN=YOUR_REFRESH_TOKEN",
-        "gmail-calendar-mcp:latest"
+        "srinivassrinu842/gmail-calendar-mcp:latest"
       ]
+    }
+  }
+}
+```
+
+---
+
+### B. HTTP/SSE Mode (Server-Sent Events)
+To run the server as a network service over HTTP, enable the `--sse` argument or define a `PORT` environment variable.
+
+#### Local Node.js SSE Setup
+Launch the server via command line:
+```bash
+PORT=3000 node dist/index.js
+# Or: node dist/index.js --sse
+```
+
+Then configure the AI client to connect to the SSE endpoint:
+```json
+{
+  "mcpServers": {
+    "gmail-calendar": {
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+#### Container SSE Setup (Docker / Podman)
+Run the container mapping the target port (e.g. port `3000`):
+
+##### Docker Run:
+```bash
+docker run -d \
+  -p 3000:3000 \
+  -e GMAIL_CLIENT_ID="YOUR_CLIENT_ID" \
+  -e GMAIL_CLIENT_SECRET="YOUR_CLIENT_SECRET" \
+  -e GMAIL_REFRESH_TOKEN="YOUR_REFRESH_TOKEN" \
+  -e PORT=3000 \
+  srinivassrinu842/gmail-calendar-mcp:latest
+```
+
+##### Client Configuration:
+```json
+{
+  "mcpServers": {
+    "gmail-calendar": {
+      "url": "http://localhost:3000/sse"
     }
   }
 }
@@ -223,4 +263,3 @@ npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
 The inspector will launch a local web dashboard (typically at http://localhost:5173) where you can inspect, run, and manually test the registered Gmail and Calendar tools.
-
