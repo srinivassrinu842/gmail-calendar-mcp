@@ -4,7 +4,7 @@
 [![Node.js Support](https://img.shields.io/badge/node-18.x%20%7C%2020.x%20%7C%2022.x-blue.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-docker.io-blue.svg?logo=docker)](https://hub.docker.com)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-green.svg)](#)
+[![Tests Status](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/srinivassrinu842/gmail-calendar-mcp/actions)
 
 A Model Context Protocol (MCP) server that provides integration with Google Gmail and Google Calendar APIs. It allows LLMs to list, search, view, create, reply to, forward, and draft emails, as well as schedule, list, update, and manage calendar events.
 
@@ -196,7 +196,6 @@ Below is a complete list of tools exported by the Gmail & Google Calendar MCP Se
 ## 5. Development Commands
 
 ```bash
-# Install dependencies
 # Install dependencies
 npm install
 
